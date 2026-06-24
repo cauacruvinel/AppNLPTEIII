@@ -209,7 +209,7 @@ class Interface:
             row=5, column=0, columnspan=2, sticky="w"
         )
 
-        self._widgets["compare_text"] = tk.Text(main)
+        self._widgets["compare_text"] = tk.Text(main, height=6, wrap="word")
         self._widgets["compare_text"].grid(row=6, column=0, columnspan=2, sticky="ew", pady=(4, 8))
 
         notebook = ttk.Notebook(main)
