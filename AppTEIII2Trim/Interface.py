@@ -1,7 +1,6 @@
 import json
-from tkinter import filedialog, messagebox
-
-import customtkinter
+import tkinter as tk
+from tkinter import filedialog, messagebox, ttk
 
 from AnalisadorNLP import AnalisadorNLP
 
@@ -123,10 +122,7 @@ class Interface:
             messagebox.showwarning("Validação", str(exc))
 
     def open_homepage(self):
-        customtkinter.set_default_color_theme("blue")
-        customtkinter.set_appearance_mode("dark")
-
-        self.homepage = customtkinter.CTk()
+        self.homepage = tk.Tk()
         self.homepage.title("Analisador de texto NLP - TextBlob + spaCy + NLTK")
         self.homepage.geometry("1180x760")
         self.homepage.minsize(900, 650)
@@ -140,15 +136,15 @@ class Interface:
         self.homepage.mainloop()
 
     def _build_sidebar(self):
-        sidebar = customtkinter.CTkFrame(self.homepage, width=220, corner_radius=0)
+        sidebar = ttk.Frame(self.homepage, width=220)
         sidebar.grid(row=0, column=0, sticky="nsew")
         sidebar.grid_rowconfigure(10, weight=1)
 
-        customtkinter.CTkLabel(
+        ttk.Label(
             sidebar,
             text="⚙ NLP por Blocos",
             font=("Arial", 16, "bold"),
-            anchor="w",
+            anchor="w"
         ).grid(row=0, column=0, padx=16, pady=(20, 10), sticky="ew")
 
         buttons = [
@@ -162,64 +158,63 @@ class Interface:
             ("🗑 Limpar Texto", self.clean_text),
         ]
         for index, (label, callback) in enumerate(buttons, start=1):
-            customtkinter.CTkButton(
+            ttk.Button(
                 sidebar,
                 text=label,
-                command=callback,
-                font=("Arial", 12, "bold" if index <= 6 else "normal"),
-                height=34,
-                corner_radius=10,
+                command=callback
             ).grid(row=index, column=0, padx=12, pady=6, sticky="ew")
 
     def _build_main(self):
-        main = customtkinter.CTkFrame(self.homepage, fg_color="transparent")
+        main = ttk.Frame(self.homepage)
         main.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
         main.grid_columnconfigure(0, weight=1)
         main.grid_columnconfigure(1, weight=1)
-        main.grid_rowconfigure(5, weight=1)
+        main.grid_rowconfigure(6, weight=1)
+        main.grid_rowconfigure(7, weight=1)
 
-        customtkinter.CTkLabel(main, text="Texto de Entrada", font=("Arial", 14, "bold")).grid(
+        ttk.Label(main, text="Texto de Entrada", font=("Arial", 14, "bold")).grid(
             row=0, column=0, columnspan=2, sticky="w"
         )
 
-        textbox = customtkinter.CTkTextbox(main, font=("Arial", 13), wrap="word")
+        textbox = tk.Text(main, font=("Arial", 13), wrap="word")
         textbox.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(4, 8))
         self._widgets["textbox"] = textbox
 
-        self._widgets["text_url"] = customtkinter.CTkEntry(
-            main, placeholder_text="https://...", font=("Arial", 12)
-        )
-        self._widgets["text_url"].grid(row=2, column=0, sticky="ew", pady=(0, 6))
+        ttk.Label(main, text="URL para coleta").grid(row=2, column=0, columnspan=2, sticky="w")
 
-        customtkinter.CTkButton(main, text="🌐 Buscar URL", command=self.load_url).grid(
-            row=2, column=1, sticky="ew", padx=(8, 0), pady=(0, 6)
+        self._widgets["text_url"] = ttk.Entry(main, font=("Arial", 12))
+        self._widgets["text_url"].grid(row=3, column=0, sticky="ew", pady=(4, 6))
+
+        ttk.Button(main, text="🌐 Buscar URL", command=self.load_url).grid(
+            row=3, column=1, sticky="ew", padx=(8, 0), pady=(4, 6)
         )
 
-        controls = customtkinter.CTkFrame(main)
-        controls.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        controls = ttk.Frame(main)
+        controls.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(0, 8))
         controls.grid_columnconfigure((0, 1, 2), weight=1)
 
-        self._widgets["wordnet_word"] = customtkinter.CTkEntry(
-            controls, placeholder_text="Palavra para WordNet"
+        ttk.Label(controls, text="Palavra para WordNet").grid(row=0, column=0, padx=4, pady=(0, 2), sticky="w")
+        ttk.Label(controls, text="Top N (padrão 10)").grid(row=0, column=1, padx=4, pady=(0, 2), sticky="w")
+        ttk.Label(controls, text="N-grama n (padrão 2)").grid(row=0, column=2, padx=4, pady=(0, 2), sticky="w")
+
+        self._widgets["wordnet_word"] = ttk.Entry(controls)
+        self._widgets["wordnet_word"].grid(row=1, column=0, padx=4, pady=4, sticky="ew")
+
+        self._widgets["top_n"] = ttk.Entry(controls)
+        self._widgets["top_n"].grid(row=1, column=1, padx=4, pady=4, sticky="ew")
+
+        self._widgets["ngram_n"] = ttk.Entry(controls)
+        self._widgets["ngram_n"].grid(row=1, column=2, padx=4, pady=4, sticky="ew")
+
+        ttk.Label(main, text="Texto para Similaridade (Bloco E)").grid(
+            row=5, column=0, columnspan=2, sticky="w"
         )
-        self._widgets["wordnet_word"].grid(row=0, column=0, padx=4, pady=4, sticky="ew")
 
-        self._widgets["top_n"] = customtkinter.CTkEntry(controls, placeholder_text="Top N (padrão 10)")
-        self._widgets["top_n"].grid(row=0, column=1, padx=4, pady=4, sticky="ew")
+        self._widgets["compare_text"] = tk.Text(main, height=8, wrap="word")
+        self._widgets["compare_text"].grid(row=6, column=0, columnspan=2, sticky="ew", pady=(4, 8))
 
-        self._widgets["ngram_n"] = customtkinter.CTkEntry(controls, placeholder_text="N-grama n (padrão 2)")
-        self._widgets["ngram_n"].grid(row=0, column=2, padx=4, pady=4, sticky="ew")
-
-        customtkinter.CTkLabel(main, text="Texto para Similaridade (Bloco E)").grid(
-            row=4, column=0, columnspan=2, sticky="w"
-        )
-
-        self._widgets["compare_text"] = customtkinter.CTkTextbox(main, height=80)
-        self._widgets["compare_text"].grid(row=5, column=0, columnspan=2, sticky="ew", pady=(4, 8))
-
-        tabview = customtkinter.CTkTabview(main)
-        tabview.grid(row=6, column=0, columnspan=2, sticky="nsew")
-        main.grid_rowconfigure(6, weight=1)
+        notebook = ttk.Notebook(main)
+        notebook.grid(row=7, column=0, columnspan=2, sticky="nsew")
 
         tabs = {
             "Resumo": "result_global",
@@ -230,15 +225,14 @@ class Interface:
             "Bloco E": "result_e",
         }
         for tab_name, key in tabs.items():
-            tabview.add(tab_name)
-            box = customtkinter.CTkTextbox(tabview.tab(tab_name), state="disabled", font=("Arial", 12))
+            tab_frame = ttk.Frame(notebook)
+            notebook.add(tab_frame, text=tab_name)
+            box = tk.Text(tab_frame, state="disabled", font=("Arial", 12), wrap="word")
             box.pack(fill="both", expand=True, padx=8, pady=8)
             self._widgets[key] = box
 
-        status = customtkinter.CTkLabel(
-            main, text="Pronto para análise.", font=("Arial", 11), anchor="w", text_color="gray"
-        )
-        status.grid(row=7, column=0, columnspan=2, sticky="w", pady=(6, 0))
+        status = ttk.Label(main, text="Pronto para análise.", font=("Arial", 11), anchor="w")
+        status.grid(row=8, column=0, columnspan=2, sticky="w", pady=(6, 0))
         self._widgets["status"] = status
 
 
