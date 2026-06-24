@@ -169,6 +169,7 @@ class Interface:
         main.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
         main.grid_columnconfigure(0, weight=1)
         main.grid_columnconfigure(1, weight=1)
+        main.grid_rowconfigure(6, weight=1)
         main.grid_rowconfigure(7, weight=1)
 
         ttk.Label(main, text="Texto de Entrada", font=("Arial", 14, "bold")).grid(
@@ -209,7 +210,7 @@ class Interface:
             row=5, column=0, columnspan=2, sticky="w"
         )
 
-        self._widgets["compare_text"] = tk.Text(main, height=6, wrap="word")
+        self._widgets["compare_text"] = tk.Text(main, height=8, wrap="word")
         self._widgets["compare_text"].grid(row=6, column=0, columnspan=2, sticky="ew", pady=(4, 8))
 
         notebook = ttk.Notebook(main)
