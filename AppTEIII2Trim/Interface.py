@@ -169,7 +169,7 @@ class Interface:
         main.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
         main.grid_columnconfigure(0, weight=1)
         main.grid_columnconfigure(1, weight=1)
-        main.grid_rowconfigure(5, weight=1)
+        main.grid_rowconfigure(7, weight=1)
 
         ttk.Label(main, text="Texto de Entrada", font=("Arial", 14, "bold")).grid(
             row=0, column=0, columnspan=2, sticky="w"
@@ -179,36 +179,41 @@ class Interface:
         textbox.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(4, 8))
         self._widgets["textbox"] = textbox
 
+        ttk.Label(main, text="URL para coleta").grid(row=2, column=0, columnspan=2, sticky="w")
+
         self._widgets["text_url"] = ttk.Entry(main, font=("Arial", 12))
-        self._widgets["text_url"].grid(row=2, column=0, sticky="ew", pady=(0, 6))
+        self._widgets["text_url"].grid(row=3, column=0, sticky="ew", pady=(4, 6))
 
         ttk.Button(main, text="🌐 Buscar URL", command=self.load_url).grid(
-            row=2, column=1, sticky="ew", padx=(8, 0), pady=(0, 6)
+            row=3, column=1, sticky="ew", padx=(8, 0), pady=(4, 6)
         )
 
         controls = ttk.Frame(main)
-        controls.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        controls.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(0, 8))
         controls.grid_columnconfigure((0, 1, 2), weight=1)
 
+        ttk.Label(controls, text="Palavra para WordNet").grid(row=0, column=0, padx=4, pady=(0, 2), sticky="w")
+        ttk.Label(controls, text="Top N (padrão 10)").grid(row=0, column=1, padx=4, pady=(0, 2), sticky="w")
+        ttk.Label(controls, text="N-grama n (padrão 2)").grid(row=0, column=2, padx=4, pady=(0, 2), sticky="w")
+
         self._widgets["wordnet_word"] = ttk.Entry(controls)
-        self._widgets["wordnet_word"].grid(row=0, column=0, padx=4, pady=4, sticky="ew")
+        self._widgets["wordnet_word"].grid(row=1, column=0, padx=4, pady=4, sticky="ew")
 
         self._widgets["top_n"] = ttk.Entry(controls)
-        self._widgets["top_n"].grid(row=0, column=1, padx=4, pady=4, sticky="ew")
+        self._widgets["top_n"].grid(row=1, column=1, padx=4, pady=4, sticky="ew")
 
         self._widgets["ngram_n"] = ttk.Entry(controls)
-        self._widgets["ngram_n"].grid(row=0, column=2, padx=4, pady=4, sticky="ew")
+        self._widgets["ngram_n"].grid(row=1, column=2, padx=4, pady=4, sticky="ew")
 
         ttk.Label(main, text="Texto para Similaridade (Bloco E)").grid(
-            row=4, column=0, columnspan=2, sticky="w"
+            row=5, column=0, columnspan=2, sticky="w"
         )
 
-        self._widgets["compare_text"] = tk.Text(main, height=5)
-        self._widgets["compare_text"].grid(row=5, column=0, columnspan=2, sticky="ew", pady=(4, 8))
+        self._widgets["compare_text"] = tk.Text(main, height=8)
+        self._widgets["compare_text"].grid(row=6, column=0, columnspan=2, sticky="ew", pady=(4, 8))
 
         tabview = ttk.Notebook(main)
-        tabview.grid(row=6, column=0, columnspan=2, sticky="nsew")
-        main.grid_rowconfigure(6, weight=1)
+        tabview.grid(row=7, column=0, columnspan=2, sticky="nsew")
 
         tabs = {
             "Resumo": "result_global",
@@ -226,7 +231,7 @@ class Interface:
             self._widgets[key] = box
 
         status = ttk.Label(main, text="Pronto para análise.", font=("Arial", 11), anchor="w")
-        status.grid(row=7, column=0, columnspan=2, sticky="w", pady=(6, 0))
+        status.grid(row=8, column=0, columnspan=2, sticky="w", pady=(6, 0))
         self._widgets["status"] = status
 
 
