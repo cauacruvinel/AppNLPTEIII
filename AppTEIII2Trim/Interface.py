@@ -209,11 +209,11 @@ class Interface:
             row=5, column=0, columnspan=2, sticky="w"
         )
 
-        self._widgets["compare_text"] = tk.Text(main, height=8)
+        self._widgets["compare_text"] = tk.Text(main, height=10)
         self._widgets["compare_text"].grid(row=6, column=0, columnspan=2, sticky="ew", pady=(4, 8))
 
-        tabview = ttk.Notebook(main)
-        tabview.grid(row=7, column=0, columnspan=2, sticky="nsew")
+        notebook = ttk.Notebook(main)
+        notebook.grid(row=7, column=0, columnspan=2, sticky="nsew")
 
         tabs = {
             "Resumo": "result_global",
@@ -224,8 +224,8 @@ class Interface:
             "Bloco E": "result_e",
         }
         for tab_name, key in tabs.items():
-            tab_frame = ttk.Frame(tabview)
-            tabview.add(tab_frame, text=tab_name)
+            tab_frame = ttk.Frame(notebook)
+            notebook.add(tab_frame, text=tab_name)
             box = tk.Text(tab_frame, state="disabled", font=("Arial", 12), wrap="word")
             box.pack(fill="both", expand=True, padx=8, pady=8)
             self._widgets[key] = box
