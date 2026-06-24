@@ -1,169 +1,247 @@
+import json
+from tkinter import filedialog, messagebox
+
 import customtkinter
-from tkinter import filedialog
-from tkinter import messagebox
-import AnalisadorNLP
+
+from AnalisadorNLP import AnalisadorNLP
+
 
 class Interface:
-	def __init__(self):
-		self.analyser = AnalisadorNLP.AnalisadorNLP()
-		self.homepage = None
-		self._widgets = {}
+    """Interface gráfica para operações NLP."""
 
-	def clean_text(self):
-		self._widgets["textbox"].delete("1.0", "end")
-		self._widgets["result_box"].delete("1.0", "end")
-		self._widgets["status"].configure(text="Texto limpo.")
+    def __init__(self):
+        self.analyser = AnalisadorNLP()
+        self.homepage = None
+        self._widgets = {}
 
-	def clean_url(self):
-		self._widgets["text_url"].delete(0, "end")
+    def _set_status(self, text: str):
+        self._widgets["status"].configure(text=text)
 
-	def upload_file(self):
-		self._widgets["status"].configure(
-			text="📂 Abrindo seletor de arquivo..."
-		)
+    def _input_text(self) -> str:
+        return self._widgets["textbox"].get("1.0", "end").strip()
 
-		self.analyser = filedialog.askopenfilename(
-			title="Selecione um Arquivo",
-			filetypes=[("Texto", "*.txt"), ("Todos os arquivos", "*.*")]
-		)
-		if self.analyser:
-			try:
-				self.analyser.open_file(self)
-			except Exception as e:
-				messagebox.showwarning(f"Erro ao abrir o arquivo {e}")
+    def clean_text(self):
+        self._widgets["textbox"].delete("1.0", "end")
+        self._widgets["compare_text"].delete("1.0", "end")
+        self._widgets["result_global"].configure(state="normal")
+        self._widgets["result_global"].delete("1.0", "end")
+        self._widgets["result_global"].configure(state="disabled")
+        self._set_status("Texto limpo.")
 
-	def open_homepage(self):
-		customtkinter.set_default_color_theme("blue")
-		customtkinter.set_appearance_mode("dark")
+    def clean_url(self):
+        self._widgets["text_url"].delete(0, "end")
 
-		self.homepage = customtkinter.CTk()
-		self.homepage.title("Analisador de texto NLP - TextBlob + spaCy + NLTK")
-		self.homepage.geometry("1080x720")
-		self.homepage.minsize(800, 600)
+    def upload_file(self):
+        self._set_status("📂 Abrindo seletor de arquivo...")
+        file_path = filedialog.askopenfilename(
+            title="Selecione um Arquivo",
+            filetypes=[("Texto", "*.txt"), ("Todos os arquivos", "*.*")],
+        )
+        if not file_path:
+            self._set_status("Operação cancelada.")
+            return
+        try:
+            file_text = self.analyser.open_file(file_path)
+            self._widgets["textbox"].delete("1.0", "end")
+            self._widgets["textbox"].insert("1.0", file_text)
+            self._set_status("Arquivo carregado com sucesso.")
+        except Exception as exc:
+            messagebox.showwarning("Erro", f"Erro ao abrir o arquivo: {exc}")
 
-		self.homepage.grid_columnconfigure(0, weight=0)
-		self.homepage.grid_columnconfigure(1, weight=1)
-		self.homepage.grid_rowconfigure(0, weight=1)
+    def load_url(self):
+        try:
+            url = self._widgets["text_url"].get()
+            text = self.analyser.search_url(url)
+            self._widgets["textbox"].delete("1.0", "end")
+            self._widgets["textbox"].insert("1.0", text)
+            self._set_status("Conteúdo da URL carregado.")
+        except Exception as exc:
+            messagebox.showwarning("Erro", f"Falha ao buscar URL: {exc}")
 
-		self._build_sidebar()
-		self._build_main()
+    def _render_tab(self, key: str, payload):
+        box = self._widgets[key]
+        box.configure(state="normal")
+        box.delete("1.0", "end")
+        box.insert("1.0", json.dumps(payload, indent=2, ensure_ascii=False))
+        box.configure(state="disabled")
 
-		self.homepage.mainloop()
+    def _run_block_a(self):
+        try:
+            self._render_tab("result_a", self.analyser.analyze_block_a(self._input_text()))
+            self._set_status("Bloco A finalizado.")
+        except Exception as exc:
+            messagebox.showwarning("Validação", str(exc))
 
-	def _build_sidebar(self):
-		sidebar = customtkinter.CTkFrame(
-			self.homepage, width=180, corner_radius=0
-		)
-		sidebar.grid(row=0, column=0, sticky="nsew")
-		sidebar.grid_rowconfigure(5, weight=1)
+    def _run_block_b(self):
+        try:
+            self._render_tab("result_b", self.analyser.analyze_block_b(self._input_text()))
+            self._set_status("Bloco B finalizado.")
+        except Exception as exc:
+            messagebox.showwarning("Validação", str(exc))
 
-		customtkinter.CTkLabel(
-			sidebar, text="⚙ Analisador de Texto - NLP",
-			font=("Arial", 16, "bold"), anchor="w"
-		).grid(row=0, column=0, padx=16, pady=(20, 10), sticky="ew")
+    def _run_block_c(self):
+        try:
+            self._render_tab("result_c", self.analyser.analyze_block_c(self._input_text()))
+            self._set_status("Bloco C finalizado.")
+        except Exception as exc:
+            messagebox.showwarning("Validação", str(exc))
 
-		customtkinter.CTkButton(
-			sidebar, text="🔍 Analisar",
-			command=self.analyser.analyse_text,
-			font=("Arial", 13, "bold"),
-			height=38, corner_radius=10
-		).grid(row=1, column=0, padx=12, pady=6, sticky="ew")
+    def _run_block_d(self):
+        try:
+            payload = self.analyser.analyze_block_d(
+                self._input_text(),
+                word_for_wordnet=self._widgets["wordnet_word"].get(),
+                n_value=self._widgets["ngram_n"].get(),
+                top_n=self._widgets["top_n"].get(),
+            )
+            self._render_tab("result_d", payload)
+            self._set_status("Bloco D finalizado.")
+        except Exception as exc:
+            messagebox.showwarning("Validação", str(exc))
 
-		customtkinter.CTkButton(
-			sidebar, text="📂 Carregar Arquivo",
-			command=self.upload_file,
-			font=("Arial", 12), height=34,
-			corner_radius=10, fg_color="transparent",
-			border_width=1
-		).grid(row=2, column=0, padx=12, pady=6, sticky="ew")
+    def _run_block_e(self):
+        try:
+            payload = self.analyser.analyze_block_e(
+                self._input_text(),
+                self._widgets["compare_text"].get("1.0", "end").strip(),
+            )
+            self._render_tab("result_e", payload)
+            self._set_status("Bloco E finalizado.")
+        except Exception as exc:
+            messagebox.showwarning("Validação", str(exc))
 
-		customtkinter.CTkButton(
-			sidebar, text="🗑 Limpar",
-			command=self.clean_text,
-			font=("Arial", 12), height=34,
-			corner_radius=10, fg_color="transparent",
-			border_width=1
-		).grid(row=3, column=0, padx=12, pady=6, sticky="ew")
+    def analyse_all(self):
+        try:
+            payload = self.analyser.analyse_text(
+                self._input_text(),
+                comparison_text=self._widgets["compare_text"].get("1.0", "end").strip(),
+                word_for_wordnet=self._widgets["wordnet_word"].get(),
+            )
+            self._render_tab("result_global", payload)
+            self._set_status("Análise completa finalizada.")
+        except Exception as exc:
+            messagebox.showwarning("Validação", str(exc))
 
-	def _build_main(self):
-		main = customtkinter.CTkFrame(self.homepage, fg_color="transparent")
-		main.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
+    def open_homepage(self):
+        customtkinter.set_default_color_theme("blue")
+        customtkinter.set_appearance_mode("dark")
 
-		main.grid_columnconfigure(0, weight=0)
-		main.grid_columnconfigure(0, weight=1)
-		main.grid_columnconfigure(1, weight=1)
-		main.grid_columnconfigure(1, weight=0)
-		main.grid_columnconfigure(2, weight=0)
-		main.grid_rowconfigure(1, weight=1)
-		main.grid_rowconfigure(4, weight=2)
+        self.homepage = customtkinter.CTk()
+        self.homepage.title("Analisador de texto NLP - TextBlob + spaCy + NLTK")
+        self.homepage.geometry("1180x760")
+        self.homepage.minsize(900, 650)
 
-		customtkinter.CTkLabel(
-			main, text="Texto de Entrada",
-			font=("Arial", 14, "bold"), anchor="w"
-		).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 4))
+        self.homepage.grid_columnconfigure(0, weight=0)
+        self.homepage.grid_columnconfigure(1, weight=1)
+        self.homepage.grid_rowconfigure(0, weight=1)
 
-		textbox = customtkinter.CTkTextbox(
-			main, corner_radius=12,
-			border_width=2, border_color="#1F6AA5",
-			font=("Arial", 13), wrap="word"
-		)
-		textbox.grid(row=1, column=0, columnspan=3, sticky="nsew", pady=(0, 10))
-		self._widgets["textbox"] = textbox
+        self._build_sidebar()
+        self._build_main()
+        self.homepage.mainloop()
 
-		customtkinter.CTkLabel(
-			main, text="URL:",
-			font=("Arial", 13, "bold"), anchor="w"
-		).grid(row=2, column=0, sticky="w", pady=(0, 8))
+    def _build_sidebar(self):
+        sidebar = customtkinter.CTkFrame(self.homepage, width=220, corner_radius=0)
+        sidebar.grid(row=0, column=0, sticky="nsew")
+        sidebar.grid_rowconfigure(10, weight=1)
 
-		text_url = customtkinter.CTkEntry(
-			main, height=32, corner_radius=10,
-			border_width=2, border_color="#1F6AA5",
-			font=("Arial", 13), placeholder_text="https://..."
-		)
-		text_url.grid(row=2, column=1, sticky="ew", padx=(0, 8), pady=(0, 8))
-		self._widgets["text_url"] = text_url
+        customtkinter.CTkLabel(
+            sidebar,
+            text="⚙ NLP por Blocos",
+            font=("Arial", 16, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, padx=16, pady=(20, 10), sticky="ew")
 
-		customtkinter.CTkButton(
-			main, text="🌐 Buscar",
-			command=self.analyser.self.search_url,
-			height=32, corner_radius=10,
-			font=("Arial", 12, "bold")
-		).grid(row=2, column=2, sticky="ew", padx=(0, 8), pady=(0, 8))
+        buttons = [
+            ("▶ Executar Tudo", self.analyse_all),
+            ("A - TextBlob", self._run_block_a),
+            ("B - Sentimento", self._run_block_b),
+            ("C - Palavras", self._run_block_c),
+            ("D - Léxico", self._run_block_d),
+            ("E - spaCy", self._run_block_e),
+            ("📂 Carregar Arquivo", self.upload_file),
+            ("🗑 Limpar Texto", self.clean_text),
+        ]
+        for index, (label, callback) in enumerate(buttons, start=1):
+            customtkinter.CTkButton(
+                sidebar,
+                text=label,
+                command=callback,
+                font=("Arial", 12, "bold" if index <= 6 else "normal"),
+                height=34,
+                corner_radius=10,
+            ).grid(row=index, column=0, padx=12, pady=6, sticky="ew")
 
-		customtkinter.CTkButton(
-			main, text="🗑 Limpar URL",
-			command=self.clean_url,
-			font=("Arial", 12), height=32,
-			corner_radius=10
-		).grid(row=2, column=3, pady=(0, 8), sticky="ew")
+    def _build_main(self):
+        main = customtkinter.CTkFrame(self.homepage, fg_color="transparent")
+        main.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
+        main.grid_columnconfigure(0, weight=1)
+        main.grid_columnconfigure(1, weight=1)
+        main.grid_rowconfigure(5, weight=1)
 
-		customtkinter.CTkLabel(
-			main, text="Resultado da Análise",
-			font=("Arial", 14, "bold"), anchor="w"
-		).grid(row=3, column=0, columnspan=3, sticky="w", pady=(4, 4))
+        customtkinter.CTkLabel(main, text="Texto de Entrada", font=("Arial", 14, "bold")).grid(
+            row=0, column=0, columnspan=2, sticky="w"
+        )
 
-		tabview = customtkinter.CTkTabview(main, corner_radius=12)
-		tabview.grid(row=4, column=0, columnspan=3, sticky="nsew")
+        textbox = customtkinter.CTkTextbox(main, font=("Arial", 13), wrap="word")
+        textbox.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(4, 8))
+        self._widgets["textbox"] = textbox
 
-		for aba in ("Resumo", "Entidades", "Sentimento", "Tokens"):
-			tabview.add(aba)
+        self._widgets["text_url"] = customtkinter.CTkEntry(
+            main, placeholder_text="https://...", font=("Arial", 12)
+        )
+        self._widgets["text_url"].grid(row=2, column=0, sticky="ew", pady=(0, 6))
 
-		result_box = customtkinter.CTkTextbox(
-			tabview.tab("Resumo"),
-			corner_radius=10, font=("Arial", 13),
-			border_width=1, border_color="#1F6AA5",
-			state="disabled"
-		)
-		result_box.pack(fill="both", expand=True, padx=8, pady=8)
-		self._widgets["result_box"] = result_box
+        customtkinter.CTkButton(main, text="🌐 Buscar URL", command=self.load_url).grid(
+            row=2, column=1, sticky="ew", padx=(8, 0), pady=(0, 6)
+        )
 
-		status = customtkinter.CTkLabel(
-			main, text="Pronto para análise.",
-			font=("Arial", 11), anchor="w",
-			text_color="gray"
-		)
-		status.grid(row=5, column=0, columnspan=3, sticky="w", pady=(6, 0))
-		self._widgets["status"] = status
+        controls = customtkinter.CTkFrame(main)
+        controls.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        controls.grid_columnconfigure((0, 1, 2), weight=1)
 
-window = Interface()
-window.open_homepage()
+        self._widgets["wordnet_word"] = customtkinter.CTkEntry(
+            controls, placeholder_text="Palavra para WordNet"
+        )
+        self._widgets["wordnet_word"].grid(row=0, column=0, padx=4, pady=4, sticky="ew")
+
+        self._widgets["top_n"] = customtkinter.CTkEntry(controls, placeholder_text="Top N (padrão 10)")
+        self._widgets["top_n"].grid(row=0, column=1, padx=4, pady=4, sticky="ew")
+
+        self._widgets["ngram_n"] = customtkinter.CTkEntry(controls, placeholder_text="N-grama n (padrão 2)")
+        self._widgets["ngram_n"].grid(row=0, column=2, padx=4, pady=4, sticky="ew")
+
+        customtkinter.CTkLabel(main, text="Texto para Similaridade (Bloco E)").grid(
+            row=4, column=0, columnspan=2, sticky="w"
+        )
+
+        self._widgets["compare_text"] = customtkinter.CTkTextbox(main, height=80)
+        self._widgets["compare_text"].grid(row=5, column=0, columnspan=2, sticky="ew", pady=(4, 8))
+
+        tabview = customtkinter.CTkTabview(main)
+        tabview.grid(row=6, column=0, columnspan=2, sticky="nsew")
+        main.grid_rowconfigure(6, weight=1)
+
+        tabs = {
+            "Resumo": "result_global",
+            "Bloco A": "result_a",
+            "Bloco B": "result_b",
+            "Bloco C": "result_c",
+            "Bloco D": "result_d",
+            "Bloco E": "result_e",
+        }
+        for tab_name, key in tabs.items():
+            tabview.add(tab_name)
+            box = customtkinter.CTkTextbox(tabview.tab(tab_name), state="disabled", font=("Arial", 12))
+            box.pack(fill="both", expand=True, padx=8, pady=8)
+            self._widgets[key] = box
+
+        status = customtkinter.CTkLabel(
+            main, text="Pronto para análise.", font=("Arial", 11), anchor="w", text_color="gray"
+        )
+        status.grid(row=7, column=0, columnspan=2, sticky="w", pady=(6, 0))
+        self._widgets["status"] = status
+
+
+if __name__ == "__main__":
+    window = Interface()
+    window.open_homepage()
